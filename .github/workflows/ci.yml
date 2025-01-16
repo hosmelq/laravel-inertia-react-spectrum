@@ -1,0 +1,167 @@
+name: Continuous integration
+
+on:
+  pull_request:
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+
+jobs:
+  check-unused-composer-dependencies:
+    name: Check unused composer dependencies
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run composer dependency analyser
+        run: vendor/bin/composer-dependency-analyser
+
+  check-composer:
+    name: Check composer
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run composer normalize
+        run: composer normalize --dry-run
+
+  check-static-code:
+    name: Check static code
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
+
+  check-code-quality:
+    name: Check code quality
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run Rector
+        run: vendor/bin/rector --ansi --dry-run
+
+  check-code-style:
+    name: Check code style
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm dependencies
+        uses: ./.github/actions/pnpm-install
+        with:
+          node-version: 22
+
+      - name: Run Oxc
+        run: pnpm lint
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run Pint
+        id: pint-test
+        run: ./vendor/bin/pint --test
+
+      - name: Run Pint with annotations
+        if: failure() && steps.pint-test.outcome != 'success'
+        run: ./vendor/bin/pint --format=checkstyle --test | cs2pr
+
+  tests:
+    name: Tests - PHP ${{ matrix.php }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.4]
+
+    services:
+      mysql:
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: testing
+        image: mysql:9.2
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-retries 5
+          --health-timeout 5s
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:8.0-M03
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-retries 5
+          --health-timeout 5s
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm dependencies
+        uses: ./.github/actions/pnpm-install
+        with:
+          node-version: 22
+
+      - name: Build React
+        run: pnpm build
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Copy .env
+        run: cp .env.testing.example .env.testing
+
+      - name: Generate key
+        run: php artisan key:generate --env=testing
+
+      - name: Run tests with phpunit/phpunit
+        run: php artisan test --parallel

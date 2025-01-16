@@ -1,0 +1,110 @@
+{
+  "name": "laravel/laravel",
+  "description": "The skeleton application for the Laravel framework.",
+  "license": "MIT",
+  "type": "project",
+  "keywords": [
+    "laravel",
+    "framework"
+  ],
+  "require": {
+    "php": "^8.4",
+    "archtechx/enums": "^1.1.1",
+    "inertiajs/inertia-laravel": "^2.0.1",
+    "intervention/image": "^3.11.2",
+    "laravel/framework": "^12.3",
+    "laravel/tinker": "^2.10.1",
+    "propaganistas/laravel-disposable-email": "^2.4.12",
+    "sentry/sentry-laravel": "^4.13.0",
+    "spatie/laravel-medialibrary": "^11.12.7",
+    "thecodingmachine/safe": "^3.0.2",
+    "tightenco/ziggy": "^2.5.2"
+  },
+  "require-dev": {
+    "barryvdh/laravel-debugbar": "^3.15.2",
+    "driftingly/rector-laravel": "^2.0.2",
+    "ergebnis/composer-normalize": "^2.45",
+    "fakerphp/faker": "^1.24.1",
+    "larastan/larastan": "^3.2.0",
+    "laravel/pail": "^1.2.2",
+    "laravel/pint": "^1.21.2",
+    "laravel/sail": "^1.41.0",
+    "mockery/mockery": "^1.6.12",
+    "nunomaduro/collision": "^8.7",
+    "pestphp/pest": "^3.7.4",
+    "pestphp/pest-plugin-laravel": "^3.1",
+    "phpstan/extension-installer": "^1.4.3",
+    "phpstan/phpstan-deprecation-rules": "^2.0.1",
+    "phpstan/phpstan-strict-rules": "^2.0.4",
+    "rector/rector": "^2.0.10",
+    "rector/type-perfect": "^2.0.2",
+    "shipmonk/composer-dependency-analyser": "^1.8.2",
+    "spaze/phpstan-disallowed-calls": "^4.4.1",
+    "thecodingmachine/phpstan-safe-rule": "^1.4",
+    "ticketswap/phpstan-error-formatter": "^1.1.4",
+    "tomasvotruba/type-coverage": "^2.0.2"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\Factories\\": "database/factories/",
+      "Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true,
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true,
+      "phpstan/extension-installer": true
+    },
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "extra": {
+    "laravel": {
+      "dont-discover": []
+    }
+  },
+  "scripts": {
+    "post-update-cmd": [
+      "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
+      "@composer bump"
+    ],
+    "post-autoload-dump": [
+      "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+      "@php artisan package:discover --ansi"
+    ],
+    "post-root-package-install": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+    ],
+    "post-create-project-cmd": [
+      "@php artisan key:generate --ansi",
+      "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+      "@php artisan migrate --graceful --ansi"
+    ],
+    "fresh": "@php artisan migrate:fresh --seed",
+    "phpstan": "phpstan analyse --memory-limit=4G",
+    "pint": "pint",
+    "rector": "rector",
+    "test": "@php artisan test",
+    "ziggy": "@php artisan ziggy:generate --types-only"
+  },
+  "scripts-descriptions": {
+    "fresh": "Runs migrate:fresh and db:seed.",
+    "phpstan": "Runs PHPStan analyse.",
+    "pint": "Run pint.",
+    "rector": "Runs Rector.",
+    "test": "Run the application tests.",
+    "ziggy": "Generate Ziggy types."
+  },
+  "$schema": "https://getcomposer.org/schema.json"
+}

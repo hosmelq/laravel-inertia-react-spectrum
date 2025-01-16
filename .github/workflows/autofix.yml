@@ -1,0 +1,39 @@
+name: autofix.ci
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  autofix:
+    name: autofix.ci
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install composer dependencies
+        uses: ./.github/actions/composer-install
+        with:
+          php-version: 8.4
+
+      - name: Run Pint
+        run: composer pint
+
+      - name: Install pnpm dependencies
+        uses: ./.github/actions/pnpm-install
+        with:
+          node-version: 22
+
+      - name: Run Oxc
+        run: pnpm fix
+
+      - name: Run Prettier
+        run: pnpm format
+
+      - name: Autofix
+        uses: autofix-ci/action@v1
